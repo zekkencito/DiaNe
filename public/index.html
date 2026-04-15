@@ -1,0 +1,260 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DiaNe OS</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @keyframes gridShift { 0% { transform: translateY(0); } 100% { transform: translateY(3px); } }
+        @keyframes pulseCore { 0%, 100% { opacity: 0.75; text-shadow: 0 0 15px currentColor; } 50% { opacity: 1; text-shadow: 0 0 25px currentColor; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 170, 0.3); } 50% { box-shadow: 0 0 15px rgba(0, 255, 170, 0.6); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes floatOrb { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-8px) scale(1.04); } }
+        @keyframes pulseRing { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.75; } }
+        @keyframes shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            background: linear-gradient(135deg, #06070f 0%, #0f0c1e 50%, #1a0d2e 100%);
+            font-family: "Segoe UI", sans-serif;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(0deg, transparent 24%, rgba(74, 200, 226, 0.08) 25%, rgba(74, 200, 226, 0.08) 26%, transparent 27%, transparent 74%, rgba(74, 200, 226, 0.08) 75%, rgba(74, 200, 226, 0.08) 76%, transparent 77%),
+                linear-gradient(90deg, transparent 24%, rgba(0, 255, 170, 0.05) 25%, rgba(0, 255, 170, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 170, 0.05) 75%, rgba(0, 255, 170, 0.05) 76%, transparent 77%);
+            background-size: 50px 50px;
+            animation: gridShift 25s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body > * { position: relative; z-index: 1; }
+        #header {
+            padding: 14px 20px;
+            background: linear-gradient(180deg, rgba(15, 12, 30, 0.8) 0%, rgba(10, 14, 39, 0.6) 100%);
+            border-bottom: 1px solid rgba(0, 255, 170, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .branding { font-size: 14px; letter-spacing: 3px; font-weight: 700; color: #00f4d0; text-transform: uppercase; }
+        #ws-badge {
+            font-size: 10px; letter-spacing: 2px; padding: 6px 12px;
+            border: 1px solid rgba(0, 255, 170, 0.4); border-radius: 6px; color: #00ddaa;
+            animation: glow 2s ease-in-out infinite;
+        }
+        #log-area {
+            height: clamp(140px, 26vh, 220px); overflow-y: auto; padding: 12px 16px;
+            display: flex; flex-direction: column; gap: 10px;
+            background: linear-gradient(180deg, rgba(20, 15, 45, 0.45) 0%, rgba(10, 20, 40, 0.3) 100%);
+            border-bottom: 1px solid rgba(0, 255, 170, 0.15);
+        }
+        .msg {
+            font-size: 13px; line-height: 1.6; padding: 10px 14px; border-radius: 14px;
+            max-width: 88%; word-break: break-word; animation: slideIn 0.35s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1); font-weight: 500;
+        }
+        .msg-user { align-self: flex-end; background: linear-gradient(135deg, rgba(0, 188, 212, 0.2), rgba(74, 144, 226, 0.16)); border-color: rgba(0, 188, 212, 0.4); }
+        .msg-ia { align-self: flex-start; color: #dffaf4; background: linear-gradient(135deg, rgba(0, 255, 170, 0.12), rgba(0, 200, 200, 0.08)); border-color: rgba(0, 255, 170, 0.3); }
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+            padding: 10px;
+            min-height: 220px;
+        }
+        .orb-wrapper { width: clamp(140px, 36vw, 220px); height: clamp(140px, 36vw, 220px); position: relative; display: flex; align-items: center; justify-content: center; animation: floatOrb 3.2s ease-in-out infinite; }
+        .orb {
+            width: 110px; height: 110px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #73b0f1, #4a90e2, #2d5cb8);
+            box-shadow: 0 0 30px rgba(74, 144, 226, 0.7);
+            animation: spin 4s linear infinite;
+        }
+        .ring { position: absolute; border-radius: 50%; border: 2px solid rgba(0, 255, 170, 0.35); animation: spin 8s linear infinite reverse, pulseRing 2.3s ease-in-out infinite; }
+        .ring.r1 { width: clamp(100px, 26vw, 150px); height: clamp(100px, 26vw, 150px); }
+        .ring.r2 { width: clamp(130px, 32vw, 190px); height: clamp(130px, 32vw, 190px); opacity: 0.6; animation-duration: 10s, 2.9s; }
+        .ring.r3 { width: clamp(160px, 38vw, 230px); height: clamp(160px, 38vw, 230px); opacity: 0.4; animation-duration: 12s, 3.4s; }
+        #ui-layer {
+            text-align: center;
+            pointer-events: none;
+            min-height: 52px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0 8px;
+        }
+        #status-text {
+            font-size: clamp(22px, 7.2vw, 33px);
+            letter-spacing: clamp(1px, 0.45vw, 3px);
+            color: #4a90e2;
+            text-transform: uppercase;
+            animation: pulseCore 2.5s ease-in-out infinite;
+            font-family: "Consolas", monospace;
+            line-height: 1.05;
+            white-space: normal;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            text-align: center;
+        }
+        #subtitle {
+            font-size: clamp(10px, 2.8vw, 11px);
+            color: #89a5d8;
+            margin-top: 6px;
+            letter-spacing: clamp(0.5px, 0.4vw, 2px);
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+        #bottom-bar {
+            display: flex; gap: 10px; padding: 12px 12px;
+            background: linear-gradient(180deg, rgba(10, 14, 39, 0.6) 0%, rgba(15, 12, 30, 0.8) 100%);
+            border-top: 1px solid rgba(0, 255, 170, 0.15);
+        }
+        #btn-pause {
+            background: linear-gradient(135deg, rgba(255, 180, 0, 0.2), rgba(255, 140, 0, 0.1));
+            border: 1px solid rgba(255, 180, 0, 0.6); color: #ffd700;
+            padding: 10px 12px; border-radius: 10px; font-weight: 700; font-size: 11px; cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            min-width: 96px;
+        }
+        #btn-pause:hover { transform: translateY(-1px); box-shadow: 0 0 18px rgba(255, 180, 0, 0.35); }
+        #btn-pause.paused { background: linear-gradient(135deg, rgba(0, 255, 120, 0.2), rgba(0, 200, 100, 0.1)); border-color: rgba(0, 255, 120, 0.7); color: #00ff88; }
+        #input-text {
+            flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(74, 200, 226, 0.35);
+            color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 13px; outline: none;
+        }
+        #input-text:focus {
+            border-color: rgba(0, 255, 170, 0.6);
+            box-shadow: 0 0 0 2px rgba(0, 255, 170, 0.15);
+        }
+        #input-text::placeholder { color: #6a6f8e; }
+
+        @media (max-height: 740px) {
+            #log-area { height: clamp(120px, 22vh, 180px); }
+            #canvas-container { gap: 8px; padding: 6px; }
+            .orb { width: 82px; height: 82px; }
+            #status-text { font-size: clamp(18px, 6.8vw, 25px); }
+            #subtitle { margin-top: 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div class="branding">⬢ DIANE OS ⬢</div>
+        <div id="ws-badge">ONLINE</div>
+    </div>
+    <div id="log-area"></div>
+    <div id="canvas-container">
+        <div class="orb-wrapper">
+            <div class="ring r1"></div>
+            <div class="ring r2"></div>
+            <div class="ring r3"></div>
+            <div class="orb" id="orb"></div>
+        </div>
+        <div id="ui-layer">
+            <div id="status-text">● INACTIVO</div>
+            <div id="subtitle">ASISTENTE IA · ESCUCHA ACTIVA</div>
+        </div>
+    </div>
+    <div id="bottom-bar">
+        <button id="btn-pause" onclick="togglePause()">⏸ PAUSAR</button>
+        <input id="input-text" type="text" placeholder="Escribe o di un comando..." onkeypress="handleEnter(event)" />
+    </div>
+
+    <script>
+        const logArea = document.getElementById("log-area");
+        const statusText = document.getElementById("status-text");
+        const badge = document.getElementById("ws-badge");
+        const orb = document.getElementById("orb");
+        const STATES = {
+            Inactivo: { text: "● INACTIVO", color: "#4a90e2", speed: "4s", subtitle: "ASISTENTE IA · ESCUCHA ACTIVA" },
+            Escuchando: { text: "◈ ESCUCHANDO", color: "#00ffff", speed: "1.6s", subtitle: "CAPTURANDO TU VOZ" },
+            Procesando: { text: "⟳ PROCESANDO", color: "#ff6b35", speed: "0.7s", subtitle: "ANALIZANDO CONTEXTO" },
+            Hablando: { text: "♪ INTERACTUANDO", color: "#00ffaa", speed: "1.2s", subtitle: "RESPONDIENDO AHORA" }
+        };
+        function setState(name) {
+            const s = STATES[name] || STATES.Inactivo;
+            statusText.textContent = s.text;
+            statusText.style.color = s.color;
+            orb.style.animationDuration = s.speed;
+            orb.style.boxShadow = "0 0 30px " + s.color;
+            const subtitle = document.getElementById("subtitle");
+            if (subtitle) subtitle.textContent = s.subtitle;
+        }
+        function addMsg(text, type) {
+            const el = document.createElement("div");
+            el.className = "msg " + (type === "ia" ? "msg-ia" : "msg-user");
+            el.textContent = text;
+            logArea.appendChild(el);
+            while (logArea.children.length > 12) logArea.removeChild(logArea.firstChild);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        let ws;
+        let reconnects = 0;
+        const MAX_RECONNECT = 6;
+        function conectar() {
+            ws = new WebSocket("ws://127.0.0.1:8765");
+            ws.onopen = () => { reconnects = 0; badge.textContent = "ONLINE"; badge.style.color = "#00ff88"; };
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.estado) setState(data.estado);
+                    if (data.texto_ia) addMsg("DiaNe: " + data.texto_ia, "ia");
+                    if (data.texto_usuario) addMsg("Tu: " + data.texto_usuario, "user");
+                } catch (_) {}
+            };
+            ws.onclose = () => {
+                badge.textContent = "OFFLINE";
+                badge.style.color = "#ff6666";
+                reconnects += 1;
+                if (reconnects <= MAX_RECONNECT) setTimeout(conectar, 1500);
+                else setTimeout(() => window.close(), 800);
+            };
+            ws.onerror = () => {};
+        }
+        conectar();
+
+        let isPaused = false;
+        function togglePause() {
+            isPaused = !isPaused;
+            const btn = document.getElementById("btn-pause");
+            if (isPaused) {
+                btn.textContent = "⏻ REANUDAR";
+                btn.classList.add("paused");
+                if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ accion: "pausar" }));
+            } else {
+                btn.textContent = "⏸ PAUSAR";
+                btn.classList.remove("paused");
+                if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ accion: "reanudar" }));
+            }
+        }
+        function handleEnter(e) {
+            if (e.key !== "Enter") return;
+            const input = document.getElementById("input-text");
+            const val = input.value.trim();
+            if (!val) return;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ accion: "teclado", texto: val }));
+                addMsg("Tu: " + val, "user");
+            }
+            input.value = "";
+        }
+        window.addEventListener("beforeunload", () => {
+            try { if (ws) ws.close(); } catch (_) {}
+        });
+    </script>
+</body>
+</html>
