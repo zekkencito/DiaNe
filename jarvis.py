@@ -161,7 +161,9 @@ if not os.path.exists(MP3_TEMP_DIR):
     os.makedirs(MP3_TEMP_DIR)
 
 # Configuración de Groq API (ULTRA-RÁPIDO - Hardware acelerador dedicado)
-GROQ_API_KEY = "***REMOVED***"
+from dotenv import load_dotenv
+load_dotenv()
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 if GROQ_DISPONIBLE and GROQ_API_KEY:
     try:
         client_groq = Groq(api_key=GROQ_API_KEY)
@@ -775,8 +777,11 @@ def get_juegos_jugables():
     return resultado
 
 def obtener_juegos_steam():
-    api_key = "***REMOVED***"
-    steam_id = "***REMOVED***"
+    api_key = os.environ.get("STEAM_API_KEY", "")
+    steam_id = os.environ.get("STEAM_ID", "")
+    if not api_key or not steam_id:
+        print("[ADVERTENCIA] STEAM_API_KEY o STEAM_ID no configurados en .env")
+        return []
     url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={api_key}&steamid={steam_id}&format=json&include_appinfo=1"
     
     try:
