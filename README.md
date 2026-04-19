@@ -1,4 +1,4 @@
-# 🤖 JARVIS v9.0 - Asistente de Voz + GUI Chat
+# DiaNe- Asistente de Voz + GUI Chat
 
 ## Características Nuevas
 
